@@ -1,237 +1,100 @@
-// import Link from '../models/link.js'
-// const linkController = {
-//     // יצירת לינק חדש
-//     createLink: async (req, res) => {
-//         try {
-//             const link = new Link(req.body);
-//             await link.save();
-//             res.status(201).send(link);
-//         } catch (error) {
-//             res.status(400).send(error);
-//         }
-//     },
+import LinkModel from "../Models/LinkModel.js";
 
-//     // קבלת כל הלינקים
-//     getAllLinks: async (req, res) => {
-//         try {
-//             const links = await Link.find({});
-//             res.status(200).send(links);
-//         } catch (error) {
-//             res.status(500).send(error);
-//         }
-//     },
-
-//     // קבלת לינק לפי ID
-//     getLinkById: async (req, res) => {
-//         try {
-//             const link = await Link.findById(req.params.id);
-//             if (!link) {
-//                 return res.status(404).send();
-//             }
-//             res.status(200).send(link);
-//         } catch (error) {
-//             res.status(500).send(error);
-//         }
-//     },
-
-//     // עדכון לינק לפי ID
-//     updateLinkById: async (req, res) => {
-//         const updates = Object.keys(req.body);
-//         const allowedUpdates = ['originalUrl'];
-//         const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
-
-//         if (!isValidOperation) {
-//             return res.status(400).send({ error: 'Invalid updates!' });
-//         }
-
-//         try {
-//             const link = await Link.findById(req.params.id);
-//             if (!link) {
-//                 return res.status(404).send();
-//             }
-
-//             updates.forEach((update) => link[update] = req.body[update]);
-//             await link.save();
-//             res.send(link);
-//         } catch (error) {
-//             res.status(400).send(error);
-//         }
-//     },
-
-//     // מחיקת לינק לפי ID
-//     deleteLinkById: async (req, res) => {
-//         try {
-//             const link = await Link.findByIdAndDelete(req.params.id);
-//             if (!link) {
-//                 return res.status(404).send();
-//             }
-//             res.send(link);
-//         } catch (error) {
-//             res.status(500).send(error);
-//         }
-//     },  
-//     // הפניה לקישור המקורי ועדכון של קליקים
-//     redirectOriginalUrl: async (req, res) => {
-//       try {
-//         const link = await Link.findById(req.params.id);
-  
-//         if (!link) {
-//           return res.status(404).send('קישור לא נמצא');
-//         }
-  
-//         // לדמות קבלת כתובת IP של הלקוח מכותרות הבקשה
-//         const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  
-//         // לעדכן את מערך ה- clicks
-//         link.clicks.push({
-//           _id: link.clicks.length,  // יצירת מזהה קליק ייחודי
-//           insertedAt: new Date(),
-//           ipAddress: ipAddress
-//         });
-  
-//         await link.save();  // לשמור את הקישור שעודכן
-  
-//         // להפנות לקישור המקורי
-//         res.redirect(link.originalUrl);
-//       } catch (error) {
-//         console.error(error);
-//         res.status(500).send('שגיאת שרת');
-//       }
-//     }
-//   };
-  
-// // module.exports = linkController;
-// export default linkController;
-import Link from '../models/link.js';
-
-const linkController = {
-  // יצירת לינק חדש
-  createLink: async (req, res) => {
+const LinksController = {
+  getList: async (req, res) => {
     try {
-      const link = new Link(req.body);
-      await link.save();
-      res.status(201).send(link);
-    } catch (error) {
-      res.status(400).send(error);
+      const Links = await LinkModel.find();
+      res.json({ Links });
+    } catch (e) {
+      res.status(400).json({ message: e.message });
     }
   },
 
-  // קבלת כל הלינקים
-  getAllLinks: async (req, res) => {
+  getById: async (req, res) => {
     try {
-      const links = await Link.find({});
-      res.status(200).send(links);
-    } catch (error) {
-      res.status(500).send(error);
+      const Link = await LinkModel.findById(req.params.id);
+      res.json(Link);
+    } catch (e) {
+      res.status(400).json({ message: e.message });
     }
   },
 
-  // קבלת לינק לפי ID
-  getLinkById: async (req, res) => {
+  add: async (req, res) => {
+    const { originalUrl } = req.body;
     try {
-      const link = await Link.findById(req.params.id);
-      if (!link) {
-        return res.status(404).send();
-      }
-      res.status(200).send(link);
-    } catch (error) {
-      res.status(500).send(error);
+      const newLink = await LinkModel.create({ originalUrl });
+      res.json(newLink);
+    } catch (e) {
+      res.status(400).json({ message: e.message });
     }
   },
 
-  // עדכון לינק לפי ID
-  updateLinkById: async (req, res) => {
-    const updates = Object.keys(req.body);
-    const allowedUpdates = ['originalUrl', 'targetParamName', 'targetValues']; // הוספת 'targetParamName', 'targetValues'
-    const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
-
-    // if (!isValidOperation) {
-    //   return res.status(400).send({ error: 'Invalid updates!' });
-    // }
-
+  update: async (req, res) => {
+    const { id } = req.params;
+    const { originalUrl } = req.body;
     try {
-      const link = await Link.findById(req.params.id);
-      if (!link) {
-        return res.status(404).send();
-      }
-
-      updates.forEach((update) => link[update] = req.body[update]);
-      await link.save();
-      res.send(link);
-    } catch (error) {
-      res.status(400).send(error);
-    }
-  },
-
-  // מחיקת לינק לפי ID
-  deleteLinkById: async (req, res) => {
-    try {
-      const link = await Link.findByIdAndDelete(req.params.id);
-      if (!link) {
-        return res.status(404).send();
-      }
-      res.send(link);
-    } catch (error) {
-      res.status(500).send(error);
-    }
-  },
-
-  // הפניה לקישור המקורי ועדכון של קליקים
-  redirectOriginalUrl: async (req, res) => {
-    try {
-      const link = await Link.findById(req.params.id);
-
-      if (!link) {
-        return res.status(404).send('קישור לא נמצא');
-      }
-
-      // בדיקה האם קיים פרמטר ממוקד ב-query string
-      const targetParamName = link.targetParamName;
-      const targetParamValue = req.query[targetParamName]; // קבלת ערך הפרמטר מה-query string
-
-      // אם קיים פרמטר ממוקד, נעדכן את ה-clicks עם הערך שלו
-      if (targetParamValue) {
-        link.clicks.push({
-          _id: link.clicks.length,
-          insertedAt: new Date(),
-          ipAddress: req.ip,
-          targetParamValue: targetParamValue  // שמירת ערך הפרמטר הממוקד ב-click
-        });
-
-        await link.save();
-      }
-
-      // הפניה לקישור המקורי
-      res.redirect(link.originalUrl);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('שגיאת שרת');
-    }
-  },
-
-  // קבלת נתוני קליקים לפי מקורות שונים
-  getLinkClicksBySource: async (req, res) => {
-    try {
-      const linkId = req.params.id;
-      const link = await Link.findById(linkId);
-      if (!link) {
-        return res.status(404).send('קישור לא נמצא');
-      }
-
-      const clicks = link.clicks;
-      const clicksBySource = {};
-
-      // קבץ את הקליקים לפי הערכים של targetValues
-      link.targetValues.forEach(target => {
-        clicksBySource[target.value] = clicks.filter(click => click.targetParamValue === target.value);
+      const updatedLink = await LinkModel.findByIdAndUpdate(id, { originalUrl }, {
+        new: true,
       });
+      res.json(updatedLink);
+    } catch (e) {
+      res.status(400).json({ message: e.message });
+    }
+  },
 
-      res.status(200).send(clicksBySource);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('שגיאת שרת');
+  delete: async (req, res) => {
+    const { id } = req.params;
+    try {
+      const deleted = await LinkModel.findByIdAndDelete(id);
+      res.json(deleted);
+    } catch (e) {
+      res.status(400).json({ message: e.message });
+    }
+  },
+  redirect: async (req, res) => {
+    const { id } = req.params;
+    const ipAddress = req.ip; // ניתן לקבל את כתובת ה-IP מהבקשה
+    const targetParamValue = req.query[req.targetParamName] || ""; 
+
+    try {
+      const link = await LinkModel.findById(id);
+      if (!link) {
+        return res.status(404).json({ message: "Link not found" });
+      }
+
+      link.clicks.push({ ipAddress, targetParamValue });
+      await link.save();
+
+      res.redirect(link.originalUrl);
+    } catch (e) {
+      res.status(400).json({ message: e.message });
+    }
+  },
+
+  getClickStats: async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const link = await LinkModel.findById(id);
+      if (!link) {
+        return res.status(404).json({ message: "Link not found" });
+      }
+
+      const clickStats = link.clicks.reduce((acc, click) => {
+        const target = click.targetParamValue;
+        if (!acc[target]) {
+          acc[target] = 0;
+        }
+        acc[target]++;
+        return acc;
+      }, {});
+
+      res.json({ clickStats });
+    } catch (e) {
+      res.status(400).json({ message: e.message });
     }
   }
 };
 
-export default linkController;
+
+export default LinksController;

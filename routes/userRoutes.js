@@ -1,12 +1,11 @@
+import express from "express";
+import UsersController from '../controllers/userController.js'
+const userRouter = express.Router();
 
-import { Router } from 'express';
-import userController from '../controllers/userController.js';
+userRouter.get('/', UsersController.getList);
+userRouter.post('/', UsersController.add);
+userRouter.get('/:id', UsersController.getById);
+userRouter.put('/:id', UsersController.update);
+userRouter.delete('/:id',UsersController.delete);
 
-const userRouter = Router();
-
-userRouter.post('/users', userController.createUser);
-userRouter.get('/users', userController.getAllUsers);
-userRouter.get('/users/:id', userController.getUserById);
-userRouter.patch('/users/:id', userController.updateUserById);
-userRouter.delete('/users/:id', userController.deleteUserById);
 export default userRouter;
